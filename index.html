@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BJJ Academy Analytics</title>
+<meta name="description" content="End-to-end BI portfolio project: anonymized data from a Brazilian Jiu-Jitsu academy, modeled with SQL and DuckDB.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --good: #0ca30c;
+    --warning: #fab219;
+    --neutral: #c3c2b7;
+    --up: #006300;
+    --down: #b42f2f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+      --series-1: #3987e5; --series-2: #d95926; --neutral: #5f5e5a; --up: #0ca30c; --down: #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-2: #d95926; --neutral: #5f5e5a; --up: #0ca30c; --down: #e66767;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 32px 16px 56px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+  .lede { color: var(--ink-2); margin: 8px 0 0; max-width: 680px; }
+  .stack { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-2); background: var(--surface); }
+  .notice {
+    margin: 20px 0 28px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink-2); font-size: 13.5px;
+  }
+  .notice strong { color: var(--ink); }
+  h2 { font-size: 18px; margin: 36px 0 4px; font-weight: 620; }
+  .section-sub { color: var(--ink-2); margin: 0 0 14px; font-size: 14px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .tile .label { font-size: 13px; color: var(--ink-2); }
+  .tile .value { font-size: 30px; font-weight: 620; margin-top: 4px; line-height: 1.1; }
+  .tile .delta { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .tile .delta .up { color: var(--up); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 16px 10px; min-width: 0; }
+  .card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .card h3 { font-size: 15px; margin: 0; font-weight: 600; }
+  .card .sub { font-size: 13px; color: var(--ink-2); margin: 2px 0 0; }
+  .toggle {
+    flex: none; font: inherit; font-size: 12px; color: var(--ink-2); background: transparent;
+    border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; cursor: pointer;
+  }
+  .toggle:hover { color: var(--ink); }
+  .chart { height: 260px; margin-top: 8px; }
+  .chart.short { height: 200px; }
+  .tbl { display: none; margin-top: 10px; overflow-x: auto; }
+  .card.show-table .chart { display: none; }
+  .card.show-table .tbl { display: block; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--ink-2); font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--ink-2); margin-top: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .legend i.line { height: 2px; border-radius: 1px; width: 14px; }
+  .method { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .step b { display: block; font-size: 14px; margin-bottom: 4px; }
+  .step p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+  .step code { font-size: 12.5px; }
+  footer { margin-top: 40px; font-size: 13px; color: var(--muted); }
+  a { color: var(--series-1); }
+  @media (max-width: 560px) { h1 { font-size: 25px; } .tile .value { font-size: 26px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Business Intelligence portfolio</p>
+      <h1>BJJ Academy Analytics</h1>
+      <p class="lede">From raw data to business decisions: students, attendance and revenue of a small Brazilian Jiu-Jitsu academy, modeled end to end with SQL.</p>
+    </div>
+    <div class="stack" aria-label="Tech stack">
+      <span class="chip">SQL</span><span class="chip">DuckDB</span><span class="chip">Python</span><span class="chip">Star schema</span>
+    </div>
+  </header>
+
+  <div class="notice" id="notice"></div>
+
+  <section aria-labelledby="kpi-h">
+    <h2 id="kpi-h">Headline</h2>
+    <p class="section-sub" id="kpi-sub"></p>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section aria-labelledby="stu-h">
+    <h2 id="stu-h">Students</h2>
+    <p class="section-sub">Is the academy growing, and are students staying?</p>
+    <div class="grid">
+      <div class="card" data-chart="active"></div>
+      <div class="card" data-chart="flow"></div>
+      <div class="card" data-chart="plan"></div>
+      <div class="card" data-chart="age"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="att-h">
+    <h2 id="att-h">Attendance</h2>
+    <p class="section-sub">How often students train, and which days fill the mat.</p>
+    <div class="grid">
+      <div class="card" data-chart="checkins"></div>
+      <div class="card" data-chart="perstudent"></div>
+      <div class="card" data-chart="weekday"></div>
+      <div class="card" data-chart="kids"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="fin-h">
+    <h2 id="fin-h">Revenue &amp; costs</h2>
+    <p class="section-sub">Values are scaled for privacy: read trends and proportions, not absolute amounts.</p>
+    <div class="grid">
+      <div class="card" data-chart="tuition"></div>
+      <div class="card" data-chart="mix"></div>
+      <div class="card" data-chart="expenses"></div>
+      <div class="card" data-chart="sales"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="how-h">
+    <h2 id="how-h">How it was built</h2>
+    <p class="section-sub">The same cycle I run at work, applied to a business I own.</p>
+    <div class="method">
+      <div class="step"><b>1 · Extract &amp; anonymize</b><p>Data exported from the academy's management app with names, photos, facial data and contacts removed; ages and ranks generalized; money values scaled.</p></div>
+      <div class="step"><b>2 · Stage &amp; validate</b><p><code>01_staging.sql</code> types every column, checks keys between facts and dimensions, and flags owner equity flows.</p></div>
+      <div class="step"><b>3 · Model</b><p><code>02_model.sql</code> builds a star schema with a month calendar and a student-month snapshot for growth and churn.</p></div>
+      <div class="step"><b>4 · Measure &amp; publish</b><p><code>03_kpis.sql</code> defines every KPI; a Python script runs it in DuckDB and renders this static page.</p></div>
+    </div>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>const DATA = {"students_monthly":[{"month_key":"2026-04","month_label":"Apr 2026","active_students":7,"new_students":3,"churned_students":0,"active_at_start":4,"churn_rate_pct":0.0},{"month_key":"2026-05","month_label":"May 2026","active_students":9,"new_students":2,"churned_students":0,"active_at_start":7,"churn_rate_pct":0.0},{"month_key":"2026-06","month_label":"Jun 2026","active_students":10,"new_students":2,"churned_students":1,"active_at_start":9,"churn_rate_pct":11.1},{"month_key":"2026-07","month_label":"Jul 2026","active_students":12,"new_students":2,"churned_students":0,"active_at_start":10,"churn_rate_pct":0.0},{"month_key":"2026-08","month_label":"Aug 2026","active_students":12,"new_students":1,"churned_students":1,"active_at_start":12,"churn_rate_pct":8.3},{"month_key":"2026-09","month_label":"Sep 2026","active_students":15,"new_students":5,"churned_students":2,"active_at_start":12,"churn_rate_pct":16.7},{"month_key":"2026-10","month_label":"Oct 2026","active_students":15,"new_students":0,"churned_students":0,"active_at_start":15,"churn_rate_pct":0.0}],"tuition_monthly":[{"month_key":"2026-04","month_label":"Apr 2026","paid_on_time":517.62,"paid_late":172.54,"open_amount":0.0,"billed":690.16,"invoices":4},{"month_key":"2026-05","month_label":"May 2026","paid_on_time":1322.8,"paid_late":0.0,"open_amount":0.0,"billed":1322.8,"invoices":7},{"month_key":"2026-06","month_label":"Jun 2026","paid_on_time":1552.86,"paid_late":0.0,"open_amount":0.0,"billed":1552.86,"invoices":9},{"month_key":"2026-07","month_label":"Jul 2026","paid_on_time":2070.48,"paid_late":0.0,"open_amount":0.0,"billed":2070.48,"invoices":12},{"month_key":"2026-08","month_label":"Aug 2026","paid_on_time":1380.32,"paid_late":345.08,"open_amount":0.0,"billed":1725.4,"invoices":10},{"month_key":"2026-09","month_label":"Sep 2026","paid_on_time":1207.78,"paid_late":431.35,"open_amount":0.0,"billed":1639.13,"invoices":10},{"month_key":"2026-10","month_label":"Oct 2026","paid_on_time":1581.62,"paid_late":345.08,"open_amount":0.0,"billed":1926.7,"invoices":12}],"attendance_monthly":[{"month_key":"2026-05","month_label":"May 2026","check_ins":66,"attending_students":6,"check_ins_per_student":11.0},{"month_key":"2026-06","month_label":"Jun 2026","check_ins":146,"attending_students":9,"check_ins_per_student":16.2},{"month_key":"2026-07","month_label":"Jul 2026","check_ins":113,"attending_students":11,"check_ins_per_student":10.3},{"month_key":"2026-08","month_label":"Aug 2026","check_ins":96,"attending_students":10,"check_ins_per_student":9.6},{"month_key":"2026-09","month_label":"Sep 2026","check_ins":121,"attending_students":15,"check_ins_per_student":8.1},{"month_key":"2026-10","month_label":"Oct 2026","check_ins":142,"attending_students":15,"check_ins_per_student":9.5}],"attendance_by_weekday":[{"weekday":"monday","weekday_num":1,"check_ins":125,"morning":109,"evening":1,"unassigned":15},{"weekday":"tuesday","weekday_num":2,"check_ins":144,"morning":0,"evening":144,"unassigned":0},{"weekday":"wednesday","weekday_num":3,"check_ins":133,"morning":114,"evening":2,"unassigned":17},{"weekday":"thursday","weekday_num":4,"check_ins":128,"morning":0,"evening":128,"unassigned":0},{"weekday":"friday","weekday_num":5,"check_ins":154,"morning":154,"evening":0,"unassigned":0}],"check_in_method":[{"check_in_method":"imported","check_ins":761,"first_seen":"2025-11-07"},{"check_in_method":"manual","check_ins":29,"first_seen":"2026-10-21"},{"check_in_method":"facial","check_ins":19,"first_seen":"2026-10-23"}],"revenue_mix_monthly":[{"month_key":"2026-04","month_label":"Apr 2026","tuition":690.16,"product_sales":0.0},{"month_key":"2026-05","month_label":"May 2026","tuition":1322.8,"product_sales":775.88},{"month_key":"2026-06","month_label":"Jun 2026","tuition":1552.86,"product_sales":296.88},{"month_key":"2026-07","month_label":"Jul 2026","tuition":2070.48,"product_sales":145.25},{"month_key":"2026-08","month_label":"Aug 2026","tuition":1725.4,"product_sales":0.0},{"month_key":"2026-09","month_label":"Sep 2026","tuition":1639.13,"product_sales":330.11},{"month_key":"2026-10","month_label":"Oct 2026","tuition":1926.7,"product_sales":831.09}],"expenses_by_category":[{"category":"inventory_purchase","amount":2097.32,"transactions":5},{"category":"facilities","amount":1400.9,"transactions":13},{"category":"belt_supplies","amount":421.1,"transactions":2},{"category":"advertising","amount":327.66,"transactions":3},{"category":"marketing","amount":256.42,"transactions":3},{"category":"software","amount":209.33,"transactions":4},{"category":"safety_equipment","amount":145.14,"transactions":2},{"category":"training","amount":83.5,"transactions":1},{"category":"other","amount":73.21,"transactions":1},{"category":"logistics","amount":63.88,"transactions":1},{"category":"telecom","amount":60.87,"transactions":3},{"category":"office_supplies","amount":30.35,"transactions":1},{"category":"cleaning","amount":28.16,"transactions":1}],"sales_by_category":[{"product_category":"apparel","units":25,"amount":1580.72},{"product_category":"accessories","units":16,"amount":366.37},{"product_category":"belt_exam","units":3,"amount":304.59},{"product_category":"private_lessons","units":4,"amount":127.53}],"active_by_plan":[{"plan_name":"plan_d","students":11},{"plan_name":"plan_c","students":2},{"plan_name":"plan_a","students":1}],"active_by_age_band":[{"age_band":"18-25","students":12},{"age_band":"26-35","students":1},{"age_band":"36+","students":2}],"kids_monthly":[{"month_key":"2026-04","month_label":"Apr 2026","active_kids_students":0},{"month_key":"2026-05","month_label":"May 2026","active_kids_students":0},{"month_key":"2026-06","month_label":"Jun 2026","active_kids_students":0},{"month_key":"2026-07","month_label":"Jul 2026","active_kids_students":2},{"month_key":"2026-08","month_label":"Aug 2026","active_kids_students":3},{"month_key":"2026-09","month_label":"Sep 2026","active_kids_students":10},{"month_key":"2026-10","month_label":"Oct 2026","active_kids_students":11}],"headline":[{"active_now":15,"active_first":7,"new_in_window":15,"churned_in_window":4,"on_time_pct":88.0,"tuition_growth_pct":179.0,"check_ins_per_student_now":9.5,"facial_share_pct":48.0}],"_meta":[{"window_start":"2026-04","window_end":"2026-10","attendance_start":"2026-05","built_at":"2026-11-03"}]};</script>
+<script>
+(function () {
+  const D = DATA;
+  const meta = D._meta[0];
+  const H = D.headline[0];
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const fmtMonth = k => { const [y, m] = k.split('-'); return new Date(+y, +m - 1, 1).toLocaleString('en-US', { month: 'short', year: 'numeric' }); };
+  const nice = s => s.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+  const num = (v, d = 0) => Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+  // ---------- Notice, tiles, footer ----------
+  document.getElementById('notice').innerHTML =
+    '<strong>Anonymized data.</strong> Real operating data from an academy I run, exported without names, photos, facial-recognition data or contacts. ' +
+    'Ages and ranks are generalized and shuffled; every monetary value is multiplied by an undisclosed factor, so growth rates and proportions are real but absolute amounts are not.';
+
+  document.getElementById('kpi-sub').textContent =
+    `Analysis window ${fmtMonth(meta.window_start)} to ${fmtMonth(meta.window_end)} (last complete month).`;
+
+  const SM = D.students_monthly;
+  const tiles = [
+    { label: 'Active students', value: num(H.active_now), delta: `<span class="up">+${H.active_now - H.active_first}</span> since ${fmtMonth(meta.window_start)}` },
+    { label: 'Tuition billed, growth', value: `+${num(H.tuition_growth_pct)}%`, delta: `${fmtMonth(meta.window_end)} vs ${fmtMonth(meta.window_start)}` },
+    { label: 'Payments on time', value: `${num(H.on_time_pct)}%`, delta: 'Share of settled invoices paid by the due date' },
+    { label: 'Check-ins per student', value: num(H.check_ins_per_student_now, 1), delta: `Monthly average in ${fmtMonth(meta.window_end)}` },
+    { label: 'Facial check-in share', value: `${num(H.facial_share_pct)}%`, delta: 'Of check-ins since the feature went live' },
+  ];
+  document.getElementById('tiles').innerHTML = tiles.map(t =>
+    `<div class="tile"><div class="label">${t.label}</div><div class="value">${t.value}</div><div class="delta">${t.delta}</div></div>`).join('');
+
+  document.getElementById('footer').innerHTML =
+    `Built ${meta.built_at} · SQL, DuckDB and Python · Data is anonymized and values are scaled.`;
+
+  // ---------- Chart specs ----------
+  // Each spec: title, sub, kind, rows, x (category key), series [{key,name,color,stack}], table columns.
+  const months = rows => rows.map(r => fmtMonth(r.month_key));
+  const specs = {
+    active: {
+      title: 'Active students', sub: 'At month end', kind: 'line', rows: SM, x: months(SM),
+      series: [{ key: 'active_students', name: 'Active students', color: '--series-1' }],
+      cols: [['month_key', 'Month'], ['active_students', 'Active']],
+    },
+    flow: {
+      title: 'New vs cancelled', sub: 'Enrollments and cancellations per month', kind: 'bar', rows: SM, x: months(SM),
+      series: [
+        { key: 'new_students', name: 'New', color: '--series-1' },
+        { key: 'churned_students', name: 'Cancelled', color: '--series-2' },
+      ],
+      cols: [['month_key', 'Month'], ['new_students', 'New'], ['churned_students', 'Cancelled'], ['churn_rate_pct', 'Churn %']],
+    },
+    plan: {
+      title: 'Active students by plan', sub: 'Current mix', kind: 'hbar', rows: D.active_by_plan, x: D.active_by_plan.map(r => nice(r.plan_name)),
+      series: [{ key: 'students', name: 'Students', color: '--series-1' }], short: true,
+      cols: [['plan_name', 'Plan'], ['students', 'Students']],
+    },
+    age: {
+      title: 'Active students by age band', sub: 'Bands merged above 36 for privacy', kind: 'hbar', rows: D.active_by_age_band, x: D.active_by_age_band.map(r => r.age_band),
+      series: [{ key: 'students', name: 'Students', color: '--series-1' }], short: true,
+      cols: [['age_band', 'Age band'], ['students', 'Students']],
+    },
+    checkins: {
+      title: 'Check-ins per month', sub: `Class-wide logging since ${fmtMonth(meta.attendance_start)}`, kind: 'bar', rows: D.attendance_monthly, x: months(D.attendance_monthly),
+      series: [{ key: 'check_ins', name: 'Check-ins', color: '--series-1' }],
+      cols: [['month_key', 'Month'], ['check_ins', 'Check-ins'], ['attending_students', 'Students']],
+    },
+    perstudent: {
+      title: 'Check-ins per attending student', sub: 'Monthly average', kind: 'line', rows: D.attendance_monthly, x: months(D.attendance_monthly), decimals: 1,
+      series: [{ key: 'check_ins_per_student', name: 'Check-ins per student', color: '--series-1' }],
+      cols: [['month_key', 'Month'], ['check_ins_per_student', 'Per student']],
+    },
+    weekday: {
+      title: 'Check-ins by weekday', sub: `${fmtMonth(meta.attendance_start)} to ${fmtMonth(meta.window_end)}`, kind: 'hbar', rows: D.attendance_by_weekday, x: D.attendance_by_weekday.map(r => nice(r.weekday)),
+      series: [{ key: 'check_ins', name: 'Check-ins', color: '--series-1' }],
+      cols: [['weekday', 'Weekday'], ['check_ins', 'Check-ins'], ['morning', 'Morning'], ['evening', 'Evening'], ['unassigned', 'Slot unknown']],
+    },
+    kids: {
+      title: 'Active kids (under 18)', sub: 'Aggregated monthly count only; no individual data', kind: 'line', rows: D.kids_monthly, x: months(D.kids_monthly),
+      series: [{ key: 'active_kids_students', name: 'Active kids', color: '--series-1' }],
+      cols: [['month_key', 'Month'], ['active_kids_students', 'Active kids']],
+    },
+    tuition: {
+      title: 'Tuition billed by payment status', sub: 'Per reference month, scaled values', kind: 'bar', rows: D.tuition_monthly, x: months(D.tuition_monthly), money: true,
+      series: [
+        { key: 'paid_on_time', name: 'Paid on time', color: '--good', stack: 't' },
+        { key: 'paid_late', name: 'Paid late', color: '--warning', stack: 't' },
+      ],
+      cols: [['month_key', 'Month'], ['paid_on_time', 'On time'], ['paid_late', 'Late'], ['billed', 'Billed'], ['invoices', 'Invoices']],
+    },
+    mix: {
+      title: 'Revenue mix', sub: 'Tuition collected and product sales, scaled values', kind: 'bar', rows: D.revenue_mix_monthly, x: months(D.revenue_mix_monthly), money: true,
+      series: [
+        { key: 'tuition', name: 'Tuition', color: '--series-1', stack: 'r' },
+        { key: 'product_sales', name: 'Product sales', color: '--series-2', stack: 'r' },
+      ],
+      cols: [['month_key', 'Month'], ['tuition', 'Tuition'], ['product_sales', 'Product sales']],
+    },
+    expenses: {
+      title: 'Operating expenses by category', sub: 'Window total, owner withdrawals excluded', kind: 'hbar', rows: D.expenses_by_category.slice(0, 8), x: D.expenses_by_category.slice(0, 8).map(r => nice(r.category)), money: true,
+      series: [{ key: 'amount', name: 'Amount', color: '--series-1' }], tall: true,
+      cols: [['category', 'Category'], ['amount', 'Amount'], ['transactions', 'Transactions']], tableRows: D.expenses_by_category,
+    },
+    sales: {
+      title: 'Product sales by category', sub: 'Window total, scaled values', kind: 'hbar', rows: D.sales_by_category, x: D.sales_by_category.map(r => nice(r.product_category)), money: true,
+      series: [{ key: 'amount', name: 'Amount', color: '--series-2' }],
+      cols: [['product_category', 'Category'], ['units', 'Units'], ['amount', 'Amount']],
+    },
+  };
+
+  // ---------- Rendering ----------
+  const charts = [];
+  function option(spec) {
+    const ink2 = css('--ink-2'), muted = css('--muted'), grid = css('--grid'), axis = css('--axis'), surface = css('--surface');
+    const horizontal = spec.kind === 'hbar';
+    const fmt = v => spec.money ? num(v, 0) : num(v, spec.decimals || 0);
+    const catAxis = {
+      type: 'category', data: spec.x, inverse: horizontal,
+      axisLine: { lineStyle: { color: axis } }, axisTick: { show: false },
+      axisLabel: { color: muted, fontSize: 11, hideOverlap: true },
+    };
+    const valAxis = {
+      type: 'value', splitNumber: 4,
+      splitLine: { lineStyle: { color: grid, width: 1 } },
+      axisLabel: { color: muted, fontSize: 11, formatter: v => v >= 10000 ? (v / 1000) + 'K' : num(v) },
+    };
+    const lastStack = {};
+    spec.series.forEach((s, i) => { if (s.stack) lastStack[s.stack] = i; });
+    const series = spec.series.map((s, i) => {
+      const color = css(s.color);
+      if (spec.kind === 'line') {
+        return {
+          type: 'line', name: s.name, data: spec.rows.map(r => r[s.key]), color,
+          lineStyle: { width: 2, cap: 'round', join: 'round' }, symbol: 'circle', symbolSize: 8,
+          itemStyle: { color, borderColor: surface, borderWidth: 2 },
+          areaStyle: { color, opacity: 0.08 },
+          endLabel: { show: true, color: ink2, fontSize: 12, formatter: p => fmt(p.value) },
+          emphasis: { scale: 1.4 },
+        };
+      }
+      const isTop = !s.stack || lastStack[s.stack] === i;
+      const r = 4;
+      return {
+        type: 'bar', name: s.name, stack: s.stack, data: spec.rows.map(row => row[s.key]), color,
+        barMaxWidth: 24, barGap: '20%',
+        itemStyle: {
+          color,
+          borderRadius: isTop ? (horizontal ? [0, r, r, 0] : [r, r, 0, 0]) : 0,
+          borderColor: s.stack ? surface : 'transparent', borderWidth: s.stack ? 1 : 0,
+        },
+        label: horizontal ? { show: true, position: 'right', color: ink2, fontSize: 11, formatter: p => fmt(p.value) } : { show: false },
+      };
+    });
+    return {
+      animation: false,
+      grid: { left: 8, right: spec.kind === 'line' ? 44 : horizontal ? 52 : 12, top: 14, bottom: 4, containLabel: true },
+      tooltip: {
+        trigger: 'axis', axisPointer: { type: spec.kind === 'line' ? 'line' : 'shadow', lineStyle: { color: axis } },
+        backgroundColor: surface, borderColor: grid, textStyle: { color: css('--ink'), fontSize: 12 },
+        valueFormatter: v => fmt(v),
+      },
+      xAxis: horizontal ? valAxis : catAxis,
+      yAxis: horizontal ? catAxis : valAxis,
+      series,
+    };
+  }
+
+  function legendHtml(spec) {
+    if (spec.series.length < 2) return '';
+    return '<div class="legend">' + spec.series.map(s =>
+      `<span><i style="background:var(${s.color})"></i>${s.name}</span>`).join('') + '</div>';
+  }
+
+  function tableHtml(spec) {
+    const rows = spec.tableRows || spec.rows;
+    const head = spec.cols.map(c => `<th scope="col">${c[1]}</th>`).join('');
+    const body = rows.map(r => '<tr>' + spec.cols.map(([k], i) => {
+      let v = r[k];
+      if (i === 0) v = /^\d{4}-\d{2}$/.test(v) ? fmtMonth(v) : nice(String(v));
+      else if (typeof v === 'number') v = num(v, spec.money && !/count|transactions|invoices|units/.test(k) ? 2 : (spec.decimals || (k.endsWith('_pct') ? 1 : 0)));
+      return `<td>${v ?? ''}</td>`;
+    }).join('') + '</tr>').join('');
+    return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  }
+
+  document.querySelectorAll('[data-chart]').forEach(card => {
+    const spec = specs[card.dataset.chart];
+    const h = spec.tall ? 300 : spec.short ? 200 : 260;
+    card.innerHTML =
+      `<div class="card-head"><div><h3>${spec.title}</h3><p class="sub">${spec.sub}</p></div>` +
+      `<button class="toggle" type="button" aria-pressed="false">Table</button></div>` +
+      legendHtml(spec) +
+      `<div class="chart" style="height:${h}px" role="img" aria-label="${spec.title}. ${spec.sub}"></div>` +
+      `<div class="tbl">${tableHtml(spec)}</div>`;
+    const el = card.querySelector('.chart');
+    const chart = echarts.init(el, null, { renderer: 'svg' });
+    chart.setOption(option(spec));
+    charts.push({ chart, spec });
+    const btn = card.querySelector('.toggle');
+    btn.addEventListener('click', () => {
+      const on = card.classList.toggle('show-table');
+      btn.textContent = on ? 'Chart' : 'Table';
+      btn.setAttribute('aria-pressed', String(on));
+      if (!on) chart.resize();
+    });
+  });
+
+  const repaint = () => charts.forEach(({ chart, spec }) => chart.setOption(option(spec), true));
+  window.addEventListener('resize', () => charts.forEach(({ chart }) => chart.resize()));
+  if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', repaint);
+  new MutationObserver(repaint).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+})();
+</script>
+</body>
+</html>

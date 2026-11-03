@@ -1,0 +1,453 @@
+{
+  "students_monthly": [
+    {
+      "month_key": "2026-04",
+      "month_label": "Apr 2026",
+      "active_students": 7,
+      "new_students": 3,
+      "churned_students": 0,
+      "active_at_start": 4,
+      "churn_rate_pct": 0.0
+    },
+    {
+      "month_key": "2026-05",
+      "month_label": "May 2026",
+      "active_students": 9,
+      "new_students": 2,
+      "churned_students": 0,
+      "active_at_start": 7,
+      "churn_rate_pct": 0.0
+    },
+    {
+      "month_key": "2026-06",
+      "month_label": "Jun 2026",
+      "active_students": 10,
+      "new_students": 2,
+      "churned_students": 1,
+      "active_at_start": 9,
+      "churn_rate_pct": 11.1
+    },
+    {
+      "month_key": "2026-07",
+      "month_label": "Jul 2026",
+      "active_students": 12,
+      "new_students": 2,
+      "churned_students": 0,
+      "active_at_start": 10,
+      "churn_rate_pct": 0.0
+    },
+    {
+      "month_key": "2026-08",
+      "month_label": "Aug 2026",
+      "active_students": 12,
+      "new_students": 1,
+      "churned_students": 1,
+      "active_at_start": 12,
+      "churn_rate_pct": 8.3
+    },
+    {
+      "month_key": "2026-09",
+      "month_label": "Sep 2026",
+      "active_students": 15,
+      "new_students": 5,
+      "churned_students": 2,
+      "active_at_start": 12,
+      "churn_rate_pct": 16.7
+    },
+    {
+      "month_key": "2026-10",
+      "month_label": "Oct 2026",
+      "active_students": 15,
+      "new_students": 0,
+      "churned_students": 0,
+      "active_at_start": 15,
+      "churn_rate_pct": 0.0
+    }
+  ],
+  "tuition_monthly": [
+    {
+      "month_key": "2026-04",
+      "month_label": "Apr 2026",
+      "paid_on_time": 517.62,
+      "paid_late": 172.54,
+      "open_amount": 0.0,
+      "billed": 690.16,
+      "invoices": 4
+    },
+    {
+      "month_key": "2026-05",
+      "month_label": "May 2026",
+      "paid_on_time": 1322.8,
+      "paid_late": 0.0,
+      "open_amount": 0.0,
+      "billed": 1322.8,
+      "invoices": 7
+    },
+    {
+      "month_key": "2026-06",
+      "month_label": "Jun 2026",
+      "paid_on_time": 1552.86,
+      "paid_late": 0.0,
+      "open_amount": 0.0,
+      "billed": 1552.86,
+      "invoices": 9
+    },
+    {
+      "month_key": "2026-07",
+      "month_label": "Jul 2026",
+      "paid_on_time": 2070.48,
+      "paid_late": 0.0,
+      "open_amount": 0.0,
+      "billed": 2070.48,
+      "invoices": 12
+    },
+    {
+      "month_key": "2026-08",
+      "month_label": "Aug 2026",
+      "paid_on_time": 1380.32,
+      "paid_late": 345.08,
+      "open_amount": 0.0,
+      "billed": 1725.4,
+      "invoices": 10
+    },
+    {
+      "month_key": "2026-09",
+      "month_label": "Sep 2026",
+      "paid_on_time": 1207.78,
+      "paid_late": 431.35,
+      "open_amount": 0.0,
+      "billed": 1639.13,
+      "invoices": 10
+    },
+    {
+      "month_key": "2026-10",
+      "month_label": "Oct 2026",
+      "paid_on_time": 1581.62,
+      "paid_late": 345.08,
+      "open_amount": 0.0,
+      "billed": 1926.7,
+      "invoices": 12
+    }
+  ],
+  "attendance_monthly": [
+    {
+      "month_key": "2026-05",
+      "month_label": "May 2026",
+      "check_ins": 66,
+      "attending_students": 6,
+      "check_ins_per_student": 11.0
+    },
+    {
+      "month_key": "2026-06",
+      "month_label": "Jun 2026",
+      "check_ins": 146,
+      "attending_students": 9,
+      "check_ins_per_student": 16.2
+    },
+    {
+      "month_key": "2026-07",
+      "month_label": "Jul 2026",
+      "check_ins": 113,
+      "attending_students": 11,
+      "check_ins_per_student": 10.3
+    },
+    {
+      "month_key": "2026-08",
+      "month_label": "Aug 2026",
+      "check_ins": 96,
+      "attending_students": 10,
+      "check_ins_per_student": 9.6
+    },
+    {
+      "month_key": "2026-09",
+      "month_label": "Sep 2026",
+      "check_ins": 121,
+      "attending_students": 15,
+      "check_ins_per_student": 8.1
+    },
+    {
+      "month_key": "2026-10",
+      "month_label": "Oct 2026",
+      "check_ins": 142,
+      "attending_students": 15,
+      "check_ins_per_student": 9.5
+    }
+  ],
+  "attendance_by_weekday": [
+    {
+      "weekday": "monday",
+      "weekday_num": 1,
+      "check_ins": 125,
+      "morning": 109,
+      "evening": 1,
+      "unassigned": 15
+    },
+    {
+      "weekday": "tuesday",
+      "weekday_num": 2,
+      "check_ins": 144,
+      "morning": 0,
+      "evening": 144,
+      "unassigned": 0
+    },
+    {
+      "weekday": "wednesday",
+      "weekday_num": 3,
+      "check_ins": 133,
+      "morning": 114,
+      "evening": 2,
+      "unassigned": 17
+    },
+    {
+      "weekday": "thursday",
+      "weekday_num": 4,
+      "check_ins": 128,
+      "morning": 0,
+      "evening": 128,
+      "unassigned": 0
+    },
+    {
+      "weekday": "friday",
+      "weekday_num": 5,
+      "check_ins": 154,
+      "morning": 154,
+      "evening": 0,
+      "unassigned": 0
+    }
+  ],
+  "check_in_method": [
+    {
+      "check_in_method": "imported",
+      "check_ins": 761,
+      "first_seen": "2025-11-07"
+    },
+    {
+      "check_in_method": "manual",
+      "check_ins": 29,
+      "first_seen": "2026-10-21"
+    },
+    {
+      "check_in_method": "facial",
+      "check_ins": 19,
+      "first_seen": "2026-10-23"
+    }
+  ],
+  "revenue_mix_monthly": [
+    {
+      "month_key": "2026-04",
+      "month_label": "Apr 2026",
+      "tuition": 690.16,
+      "product_sales": 0.0
+    },
+    {
+      "month_key": "2026-05",
+      "month_label": "May 2026",
+      "tuition": 1322.8,
+      "product_sales": 775.88
+    },
+    {
+      "month_key": "2026-06",
+      "month_label": "Jun 2026",
+      "tuition": 1552.86,
+      "product_sales": 296.88
+    },
+    {
+      "month_key": "2026-07",
+      "month_label": "Jul 2026",
+      "tuition": 2070.48,
+      "product_sales": 145.25
+    },
+    {
+      "month_key": "2026-08",
+      "month_label": "Aug 2026",
+      "tuition": 1725.4,
+      "product_sales": 0.0
+    },
+    {
+      "month_key": "2026-09",
+      "month_label": "Sep 2026",
+      "tuition": 1639.13,
+      "product_sales": 330.11
+    },
+    {
+      "month_key": "2026-10",
+      "month_label": "Oct 2026",
+      "tuition": 1926.7,
+      "product_sales": 831.09
+    }
+  ],
+  "expenses_by_category": [
+    {
+      "category": "inventory_purchase",
+      "amount": 2097.32,
+      "transactions": 5
+    },
+    {
+      "category": "facilities",
+      "amount": 1400.9,
+      "transactions": 13
+    },
+    {
+      "category": "belt_supplies",
+      "amount": 421.1,
+      "transactions": 2
+    },
+    {
+      "category": "advertising",
+      "amount": 327.66,
+      "transactions": 3
+    },
+    {
+      "category": "marketing",
+      "amount": 256.42,
+      "transactions": 3
+    },
+    {
+      "category": "software",
+      "amount": 209.33,
+      "transactions": 4
+    },
+    {
+      "category": "safety_equipment",
+      "amount": 145.14,
+      "transactions": 2
+    },
+    {
+      "category": "training",
+      "amount": 83.5,
+      "transactions": 1
+    },
+    {
+      "category": "other",
+      "amount": 73.21,
+      "transactions": 1
+    },
+    {
+      "category": "logistics",
+      "amount": 63.88,
+      "transactions": 1
+    },
+    {
+      "category": "telecom",
+      "amount": 60.87,
+      "transactions": 3
+    },
+    {
+      "category": "office_supplies",
+      "amount": 30.35,
+      "transactions": 1
+    },
+    {
+      "category": "cleaning",
+      "amount": 28.16,
+      "transactions": 1
+    }
+  ],
+  "sales_by_category": [
+    {
+      "product_category": "apparel",
+      "units": 25,
+      "amount": 1580.72
+    },
+    {
+      "product_category": "accessories",
+      "units": 16,
+      "amount": 366.37
+    },
+    {
+      "product_category": "belt_exam",
+      "units": 3,
+      "amount": 304.59
+    },
+    {
+      "product_category": "private_lessons",
+      "units": 4,
+      "amount": 127.53
+    }
+  ],
+  "active_by_plan": [
+    {
+      "plan_name": "plan_d",
+      "students": 11
+    },
+    {
+      "plan_name": "plan_c",
+      "students": 2
+    },
+    {
+      "plan_name": "plan_a",
+      "students": 1
+    }
+  ],
+  "active_by_age_band": [
+    {
+      "age_band": "18-25",
+      "students": 12
+    },
+    {
+      "age_band": "26-35",
+      "students": 1
+    },
+    {
+      "age_band": "36+",
+      "students": 2
+    }
+  ],
+  "kids_monthly": [
+    {
+      "month_key": "2026-04",
+      "month_label": "Apr 2026",
+      "active_kids_students": 0
+    },
+    {
+      "month_key": "2026-05",
+      "month_label": "May 2026",
+      "active_kids_students": 0
+    },
+    {
+      "month_key": "2026-06",
+      "month_label": "Jun 2026",
+      "active_kids_students": 0
+    },
+    {
+      "month_key": "2026-07",
+      "month_label": "Jul 2026",
+      "active_kids_students": 2
+    },
+    {
+      "month_key": "2026-08",
+      "month_label": "Aug 2026",
+      "active_kids_students": 3
+    },
+    {
+      "month_key": "2026-09",
+      "month_label": "Sep 2026",
+      "active_kids_students": 10
+    },
+    {
+      "month_key": "2026-10",
+      "month_label": "Oct 2026",
+      "active_kids_students": 11
+    }
+  ],
+  "headline": [
+    {
+      "active_now": 15,
+      "active_first": 7,
+      "new_in_window": 15,
+      "churned_in_window": 4,
+      "on_time_pct": 88.0,
+      "tuition_growth_pct": 179.0,
+      "check_ins_per_student_now": 9.5,
+      "facial_share_pct": 48.0
+    }
+  ],
+  "_meta": [
+    {
+      "window_start": "2026-04",
+      "window_end": "2026-10",
+      "attendance_start": "2026-05",
+      "built_at": "2026-11-03"
+    }
+  ]
+}
