@@ -1,8 +1,0 @@
-class_id,modality,weekday,start_time,end_time,instructor_id
-CLS_001,brazilian_jiu_jitsu,monday,06:00,07:00,INS_001
-CLS_002,brazilian_jiu_jitsu,monday,20:00,21:00,INS_001
-CLS_003,brazilian_jiu_jitsu,tuesday,20:00,21:00,INS_001
-CLS_004,brazilian_jiu_jitsu,wednesday,06:00,07:00,INS_001
-CLS_005,brazilian_jiu_jitsu,wednesday,20:00,21:00,INS_001
-CLS_006,brazilian_jiu_jitsu,thursday,20:00,21:00,INS_001
-CLS_007,brazilian_jiu_jitsu,friday,06:00,07:00,INS_001
