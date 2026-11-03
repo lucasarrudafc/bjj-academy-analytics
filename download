@@ -1,4 +1,0 @@
-warehouse.duckdb
-warehouse.duckdb.wal
-__pycache__/
-.DS_Store
