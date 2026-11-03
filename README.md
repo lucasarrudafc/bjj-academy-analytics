@@ -2,7 +2,7 @@
 
 **From raw data to business decisions:** an end-to-end BI project built on real, anonymized operating data from a small Brazilian Jiu-Jitsu academy that I run.
 
-**[View the live dashboard →](https://YOUR-GITHUB-USERNAME.github.io/bjj-academy-analytics/)**
+**[View the live dashboard →](https://github.com/lucasarrudafc/bjj-academy-analytics)**
 
 ![Dashboard preview](docs/preview.png)
 
