@@ -1,0 +1,5 @@
+plan_id,plan_name,billing_frequency,classes_per_week
+PLN_001,plan_a,monthly,
+PLN_002,plan_b,monthly,
+PLN_003,plan_c,monthly,
+PLN_004,plan_d,monthly,
