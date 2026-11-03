@@ -5,122 +5,208 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BJJ Academy Analytics</title>
 <meta name="description" content="End-to-end BI portfolio project: anonymized data from a Brazilian Jiu-Jitsu academy, modeled with SQL and DuckDB.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <style>
   :root {
     color-scheme: light;
-    --page: #f9f9f7;
-    --surface: #fcfcfb;
-    --ink: #0b0b0b;
-    --ink-2: #52514e;
-    --muted: #898781;
-    --grid: #e1e0d9;
-    --axis: #c3c2b7;
-    --border: rgba(11,11,11,0.10);
-    --series-1: #2a78d6;
-    --series-2: #eb6834;
-    --good: #0ca30c;
-    --warning: #fab219;
-    --neutral: #c3c2b7;
-    --up: #006300;
-    --down: #b42f2f;
+    --page: #f4f5f2;
+    --card: #ffffff;
+    --ink: #1e1e1e;
+    --ink-2: #55594f;
+    --muted: #868a80;
+    --line: #e2e4de;
+    --axis: #c9ccc3;
+    --band: #23392d;
+    --band-ink: #f1f3ee;
+    --band-ink-2: #b9c6bd;
+    --band-line: rgba(241, 243, 238, 0.16);
+    --series-1: #1f7a52;
+    --series-2: #c27a1e;
+    --up: #1f7a52;
+    --focus: #1f7a52;
+    --scrim: rgba(20, 24, 21, 0.45);
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
-      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-      --series-1: #3987e5; --series-2: #d95926; --neutral: #5f5e5a; --up: #0ca30c; --down: #e66767;
+      --page: #121513; --card: #1c1f1d; --ink: #eef0ec; --ink-2: #b6bbb1; --muted: #858a82;
+      --line: #2b302c; --axis: #3a403b; --band: #18271f; --band-ink: #eef0ec; --band-ink-2: #a9b8ae;
+      --series-1: #26a06d; --series-2: #c97d24; --up: #3fbf86; --focus: #3fbf86; --scrim: rgba(0, 0, 0, 0.6);
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
-    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-    --series-1: #3987e5; --series-2: #d95926; --neutral: #5f5e5a; --up: #0ca30c; --down: #e66767;
+    --page: #121513; --card: #1c1f1d; --ink: #eef0ec; --ink-2: #b6bbb1; --muted: #858a82;
+    --line: #2b302c; --axis: #3a403b; --band: #18271f; --band-ink: #eef0ec; --band-ink-2: #a9b8ae;
+    --series-1: #26a06d; --series-2: #c97d24; --up: #3fbf86; --focus: #3fbf86; --scrim: rgba(0, 0, 0, 0.6);
   }
+
   * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--page); color: var(--ink);
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 400 16px/1.55 var(--sans); }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- Hero band ---------- */
+  .hero { background: var(--band); color: var(--band-ink); padding: 56px 0 40px; }
+  .hero h1 {
+    margin: 0; font-weight: 650; font-stretch: 82%; letter-spacing: -0.02em;
+    font-size: clamp(36px, 6vw, 64px); line-height: 1.02;
   }
-  .wrap { max-width: 1160px; margin: 0 auto; padding: 32px 16px 56px; }
-  header { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
-  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
-  h1 { font-size: 30px; line-height: 1.15; margin: 0; font-weight: 650; letter-spacing: -.01em; }
-  .lede { color: var(--ink-2); margin: 8px 0 0; max-width: 680px; }
-  .stack { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-2); background: var(--surface); }
-  .notice {
-    margin: 20px 0 28px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
-    background: var(--surface); color: var(--ink-2); font-size: 13.5px;
+  .hero .lede { margin: 16px 0 0; max-width: 62ch; color: var(--band-ink-2); font-size: 17px; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+    font: 600 14px/1 var(--sans); padding: 11px 16px; border-radius: 999px; cursor: pointer;
+    border: 1px solid transparent; transition: background-color .15s, border-color .15s;
   }
-  .notice strong { color: var(--ink); }
-  h2 { font-size: 18px; margin: 36px 0 4px; font-weight: 620; }
-  .section-sub { color: var(--ink-2); margin: 0 0 14px; font-size: 14px; }
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
-  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
-  .tile .label { font-size: 13px; color: var(--ink-2); }
-  .tile .value { font-size: 30px; font-weight: 620; margin-top: 4px; line-height: 1.1; }
-  .tile .delta { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
-  .tile .delta .up { color: var(--up); font-weight: 600; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); gap: 12px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 16px 10px; min-width: 0; }
-  .card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-  .card h3 { font-size: 15px; margin: 0; font-weight: 600; }
-  .card .sub { font-size: 13px; color: var(--ink-2); margin: 2px 0 0; }
-  .toggle {
-    flex: none; font: inherit; font-size: 12px; color: var(--ink-2); background: transparent;
-    border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; cursor: pointer;
+  .btn svg { width: 16px; height: 16px; }
+  .btn-primary { background: var(--band-ink); color: var(--band); }
+  .btn-primary:hover { background: #ffffff; }
+  .btn-ghost { color: var(--band-ink); border-color: var(--band-line); }
+  .btn-ghost:hover { border-color: var(--band-ink-2); }
+
+  .kpis {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 44px;
+    border-top: 1px solid var(--band-line);
   }
-  .toggle:hover { color: var(--ink); }
-  .chart { height: 260px; margin-top: 8px; }
-  .chart.short { height: 200px; }
-  .tbl { display: none; margin-top: 10px; overflow-x: auto; }
-  .card.show-table .chart { display: none; }
-  .card.show-table .tbl { display: block; }
-  table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
-  th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
-  th:first-child, td:first-child { text-align: left; }
-  th { color: var(--ink-2); font-weight: 600; }
-  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--ink-2); margin-top: 8px; }
+  .kpi { padding: 18px 20px 4px 0; }
+  .kpi + .kpi { padding-left: 20px; border-left: 1px solid var(--band-line); }
+  .kpi .value { font-weight: 600; font-stretch: 82%; font-size: 40px; line-height: 1; letter-spacing: -0.01em; }
+  .kpi .label { margin-top: 8px; font-size: 14px; font-weight: 600; }
+  .kpi .context { margin-top: 2px; font-size: 13px; color: var(--band-ink-2); }
+  .privacy { margin: 28px 0 0; font-size: 13.5px; color: var(--band-ink-2); max-width: 90ch; }
+  .privacy strong { color: var(--band-ink); font-weight: 600; }
+
+  /* ---------- Sections ---------- */
+  main { padding: 8px 0 64px; }
+  section { margin-top: 48px; }
+  .section-head { margin-bottom: 16px; }
+  .section-head h2 { margin: 0; font-size: 24px; font-weight: 650; font-stretch: 88%; letter-spacing: -0.01em; }
+  .section-head p { margin: 4px 0 0; color: var(--ink-2); font-size: 15px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 8px; min-width: 0; }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .card h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .card .sub { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-2); }
+  .data-btn {
+    flex: none; display: inline-flex; align-items: center; gap: 6px;
+    font: 500 13px/1 var(--sans); color: var(--ink-2); background: transparent;
+    border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .data-btn svg { width: 14px; height: 14px; }
+  .data-btn:hover { color: var(--ink); border-color: var(--axis); }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--ink-2); margin-top: 10px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-  .legend i.line { height: 2px; border-radius: 1px; width: 14px; }
-  .method { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
-  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
-  .step b { display: block; font-size: 14px; margin-bottom: 4px; }
-  .step p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
-  .step code { font-size: 12.5px; }
-  footer { margin-top: 40px; font-size: 13px; color: var(--muted); }
-  a { color: var(--series-1); }
-  @media (max-width: 560px) { h1 { font-size: 25px; } .tile .value { font-size: 26px; } }
+  .chart { margin-top: 6px; }
+
+  /* ---------- Pipeline ---------- */
+  .pipeline { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; counter-reset: step; }
+  .pipeline li { position: relative; padding-top: 26px; counter-increment: step; }
+  .pipeline li::before {
+    content: counter(step); position: absolute; top: 0; left: 0;
+    width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--band); color: var(--band-ink); font: 600 13px/1 var(--sans);
+  }
+  .pipeline li::after { content: ""; position: absolute; top: 13px; left: 34px; right: -8px; height: 1px; background: var(--axis); }
+  .pipeline li:last-child::after { display: none; }
+  .pipeline h3 { margin: 14px 0 6px; font-size: 16px; font-weight: 600; }
+  .pipeline p { margin: 0 0 10px; font-size: 14.5px; color: var(--ink-2); }
+  .file-link {
+    display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+    font: 500 13px/1.2 var(--mono); color: var(--series-1);
+    padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--series-1) 9%, transparent);
+  }
+  .file-link:hover { background: color-mix(in srgb, var(--series-1) 16%, transparent); }
+  .file-link svg { width: 13px; height: 13px; flex: none; }
+
+  footer { border-top: 1px solid var(--line); padding: 20px 0 40px; font-size: 13.5px; color: var(--muted); }
+  footer a { color: var(--ink-2); }
+
+  /* ---------- Data modal ---------- */
+  dialog {
+    width: min(720px, calc(100vw - 32px)); max-height: min(80vh, 720px); padding: 0;
+    border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  }
+  dialog::backdrop { background: var(--scrim); }
+  dialog[open] { display: flex; flex-direction: column; animation: pop .18s ease-out; }
+  dialog[open]::backdrop { animation: fade .18s ease-out; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 20px 12px; border-bottom: 1px solid var(--line); }
+  .modal-head h2 { margin: 0; font-size: 18px; font-weight: 650; }
+  .modal-head p { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-2); }
+  .icon-btn { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink-2); cursor: pointer; }
+  .icon-btn:hover { color: var(--ink); border-color: var(--axis); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .modal-body { overflow: auto; padding: 4px 20px 8px; }
+  .modal-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 20px 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .btn-quiet { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn-quiet:hover { border-color: var(--axis); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; padding-left: 0; }
+  th:last-child, td:last-child { padding-right: 0; }
+  thead th { position: sticky; top: 0; background: var(--card); color: var(--ink-2); font-weight: 600; font-size: 13px; }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 960px) {
+    .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .kpi:nth-child(4) { padding-left: 0; border-left: 0; }
+    .kpi:nth-child(n+4) { border-top: 1px solid var(--band-line); }
+    .grid { grid-template-columns: minmax(0, 1fr); }
+    .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 28px; }
+    .pipeline li:nth-child(2)::after { display: none; }
+  }
+  @media (max-width: 600px) {
+    .hero { padding-top: 40px; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kpi:nth-child(n) { padding-left: 0; border-left: 0; border-top: 1px solid var(--band-line); }
+    .kpi:nth-child(even) { padding-left: 16px; border-left: 1px solid var(--band-line); }
+    .kpi:nth-child(-n+2) { border-top: 0; }
+    .kpi .value { font-size: 34px; }
+    .pipeline { grid-template-columns: minmax(0, 1fr); }
+    .pipeline li::after { display: none; }
+    .card { padding: 16px 14px 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <p class="eyebrow">Business Intelligence portfolio</p>
-      <h1>BJJ Academy Analytics</h1>
-      <p class="lede">From raw data to business decisions: students, attendance and revenue of a small Brazilian Jiu-Jitsu academy, modeled end to end with SQL.</p>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>BJJ Academy Analytics</h1>
+    <p class="lede">Students, attendance and revenue of the Jiu-Jitsu academy I run, taken from raw app data to business decisions with SQL, DuckDB and Python.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" id="repo-link" href="#">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View the code on GitHub
+      </a>
+      <a class="btn btn-ghost" href="#how">How it was built</a>
     </div>
-    <div class="stack" aria-label="Tech stack">
-      <span class="chip">SQL</span><span class="chip">DuckDB</span><span class="chip">Python</span><span class="chip">Star schema</span>
-    </div>
-  </header>
+    <div class="kpis" id="kpis"></div>
+    <p class="privacy"><strong>Real data, anonymized.</strong> Names, photos, facial-recognition data and contacts were removed; ages and ranks are generalized; every amount is multiplied by an undisclosed factor, so growth rates and proportions are real and absolute values are not.</p>
+  </div>
+</header>
 
-  <div class="notice" id="notice"></div>
-
-  <section aria-labelledby="kpi-h">
-    <h2 id="kpi-h">Headline</h2>
-    <p class="section-sub" id="kpi-sub"></p>
-    <div class="tiles" id="tiles"></div>
-  </section>
-
+<main class="wrap">
   <section aria-labelledby="stu-h">
-    <h2 id="stu-h">Students</h2>
-    <p class="section-sub">Is the academy growing, and are students staying?</p>
+    <div class="section-head"><h2 id="stu-h">Students</h2><p>Is the academy growing, and are students staying?</p></div>
     <div class="grid">
       <div class="card" data-chart="active"></div>
       <div class="card" data-chart="flow"></div>
@@ -130,8 +216,7 @@
   </section>
 
   <section aria-labelledby="att-h">
-    <h2 id="att-h">Attendance</h2>
-    <p class="section-sub">How often students train, and which days fill the mat.</p>
+    <div class="section-head"><h2 id="att-h">Attendance</h2><p>How often students train, and which days fill the mat.</p></div>
     <div class="grid">
       <div class="card" data-chart="checkins"></div>
       <div class="card" data-chart="perstudent"></div>
@@ -141,8 +226,7 @@
   </section>
 
   <section aria-labelledby="fin-h">
-    <h2 id="fin-h">Revenue &amp; costs</h2>
-    <p class="section-sub">Values are scaled for privacy: read trends and proportions, not absolute amounts.</p>
+    <div class="section-head"><h2 id="fin-h">Revenue and costs</h2><p>Amounts are scaled for privacy, so read the trends and proportions.</p></div>
     <div class="grid">
       <div class="card" data-chart="tuition"></div>
       <div class="card" data-chart="mix"></div>
@@ -151,23 +235,37 @@
     </div>
   </section>
 
-  <section aria-labelledby="how-h">
-    <h2 id="how-h">How it was built</h2>
-    <p class="section-sub">The same cycle I run at work, applied to a business I own.</p>
-    <div class="method">
-      <div class="step"><b>1 · Extract &amp; anonymize</b><p>Data exported from the academy's management app with names, photos, facial data and contacts removed; ages and ranks generalized; money values scaled.</p></div>
-      <div class="step"><b>2 · Stage &amp; validate</b><p><code>01_staging.sql</code> types every column, checks keys between facts and dimensions, and flags owner equity flows.</p></div>
-      <div class="step"><b>3 · Model</b><p><code>02_model.sql</code> builds a star schema with a month calendar and a student-month snapshot for growth and churn.</p></div>
-      <div class="step"><b>4 · Measure &amp; publish</b><p><code>03_kpis.sql</code> defines every KPI; a Python script runs it in DuckDB and renders this static page.</p></div>
-    </div>
+  <section id="how" aria-labelledby="how-h">
+    <div class="section-head"><h2 id="how-h">How it was built</h2><p>The same BI cycle I run at work, applied to a business I own. Each step links to its code.</p></div>
+    <ol class="pipeline" id="pipeline"></ol>
   </section>
+</main>
 
-  <footer id="footer"></footer>
-</div>
+<footer>
+  <div class="wrap" id="footer"></div>
+</footer>
+
+<dialog id="data-modal" aria-labelledby="modal-title">
+  <div class="modal-head">
+    <div><h2 id="modal-title"></h2><p id="modal-sub"></p></div>
+    <button class="icon-btn" type="button" id="modal-close" aria-label="Close">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </button>
+  </div>
+  <div class="modal-body" id="modal-body"></div>
+  <div class="modal-foot">
+    <span id="modal-count"></span>
+    <button class="btn btn-quiet" type="button" id="modal-download">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13h10"/></svg>
+      Download CSV
+    </button>
+  </div>
+</dialog>
 
 <script>const DATA = /*__DATA__*/null;</script>
 <script>
 (function () {
+  const REPO = 'https://github.com/lucasarrudafc/bjj-academy-analytics';
   const D = DATA;
   const meta = D._meta[0];
   const H = D.headline[0];
@@ -175,31 +273,37 @@
   const fmtMonth = k => { const [y, m] = k.split('-'); return new Date(+y, +m - 1, 1).toLocaleString('en-US', { month: 'short', year: 'numeric' }); };
   const nice = s => s.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
   const num = (v, d = 0) => Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  // ---------- Notice, tiles, footer ----------
-  document.getElementById('notice').innerHTML =
-    '<strong>Anonymized data.</strong> Real operating data from an academy I run, exported without names, photos, facial-recognition data or contacts. ' +
-    'Ages and ranks are generalized and shuffled; every monetary value is multiplied by an undisclosed factor, so growth rates and proportions are real but absolute amounts are not.';
+  document.getElementById('repo-link').href = REPO;
 
-  document.getElementById('kpi-sub').textContent =
-    `Analysis window ${fmtMonth(meta.window_start)} to ${fmtMonth(meta.window_end)} (last complete month).`;
-
-  const SM = D.students_monthly;
-  const tiles = [
-    { label: 'Active students', value: num(H.active_now), delta: `<span class="up">+${H.active_now - H.active_first}</span> since ${fmtMonth(meta.window_start)}` },
-    { label: 'Tuition billed, growth', value: `+${num(H.tuition_growth_pct)}%`, delta: `${fmtMonth(meta.window_end)} vs ${fmtMonth(meta.window_start)}` },
-    { label: 'Payments on time', value: `${num(H.on_time_pct)}%`, delta: 'Share of settled invoices paid by the due date' },
-    { label: 'Check-ins per student', value: num(H.check_ins_per_student_now, 1), delta: `Monthly average in ${fmtMonth(meta.window_end)}` },
-    { label: 'Facial check-in share', value: `${num(H.facial_share_pct)}%`, delta: 'Of check-ins since the feature went live' },
+  // ---------- KPIs ----------
+  const kpis = [
+    { value: num(H.active_now), label: 'Active students', context: `+${H.active_now - H.active_first} since ${fmtMonth(meta.window_start)}` },
+    { value: `+${num(H.tuition_growth_pct)}%`, label: 'Tuition growth', context: `${fmtMonth(meta.window_end)} vs ${fmtMonth(meta.window_start)}` },
+    { value: `${num(H.on_time_pct)}%`, label: 'Paid on time', context: 'Of settled invoices' },
+    { value: num(H.check_ins_per_student_now, 1), label: 'Check-ins per student', context: `Monthly, ${fmtMonth(meta.window_end)}` },
+    { value: `${num(H.facial_share_pct)}%`, label: 'Facial check-in', context: 'Share since launch' },
   ];
-  document.getElementById('tiles').innerHTML = tiles.map(t =>
-    `<div class="tile"><div class="label">${t.label}</div><div class="value">${t.value}</div><div class="delta">${t.delta}</div></div>`).join('');
+  document.getElementById('kpis').innerHTML = kpis.map(k =>
+    `<div class="kpi"><div class="value">${k.value}</div><div class="label">${k.label}</div><div class="context">${k.context}</div></div>`).join('');
+
+  // ---------- Pipeline ----------
+  const fileIcon = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.5h5.5L12.5 4.5v10h-8.5z"/><path d="M9.5 1.5v3h3"/></svg>';
+  const steps = [
+    { title: 'Extract and anonymize', text: 'Exported from the academy\'s management app without personal data; ages and ranks generalized, amounts scaled.', file: 'data/data_dictionary.md' },
+    { title: 'Stage and validate', text: 'Types every column, cleans blanks, checks keys between facts and dimensions and flags owner equity flows.', file: 'sql/01_staging.sql' },
+    { title: 'Model', text: 'Builds the star schema, a month calendar and a student-month snapshot for growth and churn.', file: 'sql/02_model.sql' },
+    { title: 'Measure and publish', text: 'Defines every KPI in SQL; a Python script runs it in DuckDB and renders this page.', file: 'sql/03_kpis.sql' },
+  ];
+  document.getElementById('pipeline').innerHTML = steps.map(s =>
+    `<li><h3>${s.title}</h3><p>${s.text}</p><a class="file-link" href="${REPO}/blob/main/${s.file}" target="_blank" rel="noopener">${fileIcon}${s.file.split('/').pop()}</a></li>`).join('');
 
   document.getElementById('footer').innerHTML =
-    `Built ${meta.built_at} · SQL, DuckDB and Python · Data is anonymized and values are scaled.`;
+    `Analysis window ${fmtMonth(meta.window_start)} to ${fmtMonth(meta.window_end)}. Built on ${meta.built_at} from <a href="${REPO}" target="_blank" rel="noopener">the repository</a>.`;
 
   // ---------- Chart specs ----------
-  // Each spec: title, sub, kind, rows, x (category key), series [{key,name,color,stack}], table columns.
+  const SM = D.students_monthly;
   const months = rows => rows.map(r => fmtMonth(r.month_key));
   const specs = {
     active: {
@@ -208,21 +312,21 @@
       cols: [['month_key', 'Month'], ['active_students', 'Active']],
     },
     flow: {
-      title: 'New vs cancelled', sub: 'Enrollments and cancellations per month', kind: 'bar', rows: SM, x: months(SM),
+      title: 'New and cancelled students', sub: 'Per month', kind: 'bar', rows: SM, x: months(SM),
       series: [
         { key: 'new_students', name: 'New', color: '--series-1' },
         { key: 'churned_students', name: 'Cancelled', color: '--series-2' },
       ],
-      cols: [['month_key', 'Month'], ['new_students', 'New'], ['churned_students', 'Cancelled'], ['churn_rate_pct', 'Churn %']],
+      cols: [['month_key', 'Month'], ['new_students', 'New'], ['churned_students', 'Cancelled'], ['churn_rate_pct', 'Churn rate (%)']],
     },
     plan: {
       title: 'Active students by plan', sub: 'Current mix', kind: 'hbar', rows: D.active_by_plan, x: D.active_by_plan.map(r => nice(r.plan_name)),
-      series: [{ key: 'students', name: 'Students', color: '--series-1' }], short: true,
+      series: [{ key: 'students', name: 'Students', color: '--series-1' }], h: 200,
       cols: [['plan_name', 'Plan'], ['students', 'Students']],
     },
     age: {
-      title: 'Active students by age band', sub: 'Bands merged above 36 for privacy', kind: 'hbar', rows: D.active_by_age_band, x: D.active_by_age_band.map(r => r.age_band),
-      series: [{ key: 'students', name: 'Students', color: '--series-1' }], short: true,
+      title: 'Active students by age band', sub: 'Bands above 36 merged for privacy', kind: 'hbar', rows: D.active_by_age_band, x: D.active_by_age_band.map(r => r.age_band),
+      series: [{ key: 'students', name: 'Students', color: '--series-1' }], h: 200,
       cols: [['age_band', 'Age band'], ['students', 'Students']],
     },
     checkins: {
@@ -241,20 +345,20 @@
       cols: [['weekday', 'Weekday'], ['check_ins', 'Check-ins'], ['morning', 'Morning'], ['evening', 'Evening'], ['unassigned', 'Slot unknown']],
     },
     kids: {
-      title: 'Active kids (under 18)', sub: 'Aggregated monthly count only; no individual data', kind: 'line', rows: D.kids_monthly, x: months(D.kids_monthly),
+      title: 'Active kids (under 18)', sub: 'Monthly count only, no individual data', kind: 'line', rows: D.kids_monthly, x: months(D.kids_monthly),
       series: [{ key: 'active_kids_students', name: 'Active kids', color: '--series-1' }],
       cols: [['month_key', 'Month'], ['active_kids_students', 'Active kids']],
     },
     tuition: {
-      title: 'Tuition billed by payment status', sub: 'Per reference month, scaled values', kind: 'bar', rows: D.tuition_monthly, x: months(D.tuition_monthly), money: true,
+      title: 'Tuition billed by payment timing', sub: 'Per reference month, scaled', kind: 'bar', rows: D.tuition_monthly, x: months(D.tuition_monthly), money: true,
       series: [
-        { key: 'paid_on_time', name: 'Paid on time', color: '--good', stack: 't' },
-        { key: 'paid_late', name: 'Paid late', color: '--warning', stack: 't' },
+        { key: 'paid_on_time', name: 'Paid on time', color: '--series-1', stack: 't' },
+        { key: 'paid_late', name: 'Paid late', color: '--series-2', stack: 't' },
       ],
       cols: [['month_key', 'Month'], ['paid_on_time', 'On time'], ['paid_late', 'Late'], ['billed', 'Billed'], ['invoices', 'Invoices']],
     },
     mix: {
-      title: 'Revenue mix', sub: 'Tuition collected and product sales, scaled values', kind: 'bar', rows: D.revenue_mix_monthly, x: months(D.revenue_mix_monthly), money: true,
+      title: 'Revenue mix', sub: 'Tuition collected and product sales, scaled', kind: 'bar', rows: D.revenue_mix_monthly, x: months(D.revenue_mix_monthly), money: true,
       series: [
         { key: 'tuition', name: 'Tuition', color: '--series-1', stack: 'r' },
         { key: 'product_sales', name: 'Product sales', color: '--series-2', stack: 'r' },
@@ -262,32 +366,37 @@
       cols: [['month_key', 'Month'], ['tuition', 'Tuition'], ['product_sales', 'Product sales']],
     },
     expenses: {
-      title: 'Operating expenses by category', sub: 'Window total, owner withdrawals excluded', kind: 'hbar', rows: D.expenses_by_category.slice(0, 8), x: D.expenses_by_category.slice(0, 8).map(r => nice(r.category)), money: true,
-      series: [{ key: 'amount', name: 'Amount', color: '--series-1' }], tall: true,
+      title: 'Operating expenses by category', sub: 'Top 8 in the window, owner withdrawals excluded', kind: 'hbar', rows: D.expenses_by_category.slice(0, 8), x: D.expenses_by_category.slice(0, 8).map(r => nice(r.category)), money: true,
+      series: [{ key: 'amount', name: 'Amount', color: '--series-1' }], h: 300,
       cols: [['category', 'Category'], ['amount', 'Amount'], ['transactions', 'Transactions']], tableRows: D.expenses_by_category,
     },
     sales: {
-      title: 'Product sales by category', sub: 'Window total, scaled values', kind: 'hbar', rows: D.sales_by_category, x: D.sales_by_category.map(r => nice(r.product_category)), money: true,
+      title: 'Product sales by category', sub: 'Window total, scaled', kind: 'hbar', rows: D.sales_by_category, x: D.sales_by_category.map(r => nice(r.product_category)), money: true,
       series: [{ key: 'amount', name: 'Amount', color: '--series-2' }],
       cols: [['product_category', 'Category'], ['units', 'Units'], ['amount', 'Amount']],
     },
   };
 
-  // ---------- Rendering ----------
-  const charts = [];
+  // ---------- Charts ----------
   function option(spec) {
-    const ink2 = css('--ink-2'), muted = css('--muted'), grid = css('--grid'), axis = css('--axis'), surface = css('--surface');
+    const ink2 = css('--ink-2'), muted = css('--muted'), line = css('--line'), axis = css('--axis'), card = css('--card');
+    const font = css('--sans');
     const horizontal = spec.kind === 'hbar';
     const fmt = v => spec.money ? num(v, 0) : num(v, spec.decimals || 0);
     const catAxis = {
       type: 'category', data: spec.x, inverse: horizontal,
       axisLine: { lineStyle: { color: axis } }, axisTick: { show: false },
-      axisLabel: { color: muted, fontSize: 11, hideOverlap: true },
+      axisLabel: {
+        color: muted, fontSize: 12, fontFamily: font, hideOverlap: true,
+        // Monthly axes show the short month; the full label stays in the tooltip.
+        formatter: v => /^[A-Z][a-z]{2} \d{4}$/.test(v) ? v.slice(0, 3) : v,
+      },
     };
     const valAxis = {
       type: 'value', splitNumber: 4,
-      splitLine: { lineStyle: { color: grid, width: 1 } },
-      axisLabel: { color: muted, fontSize: 11, formatter: v => v >= 10000 ? (v / 1000) + 'K' : num(v) },
+      splitLine: { lineStyle: { color: line, width: 1 } },
+      // Horizontal bars carry a value label on every bar, so their value axis is redundant.
+      axisLabel: { show: !horizontal, color: muted, fontSize: 12, fontFamily: font, formatter: v => v >= 10000 ? (v / 1000) + 'K' : num(v) },
     };
     const lastStack = {};
     spec.series.forEach((s, i) => { if (s.stack) lastStack[s.stack] = i; });
@@ -297,31 +406,31 @@
         return {
           type: 'line', name: s.name, data: spec.rows.map(r => r[s.key]), color,
           lineStyle: { width: 2, cap: 'round', join: 'round' }, symbol: 'circle', symbolSize: 8,
-          itemStyle: { color, borderColor: surface, borderWidth: 2 },
+          itemStyle: { color, borderColor: card, borderWidth: 2 },
           areaStyle: { color, opacity: 0.08 },
-          endLabel: { show: true, color: ink2, fontSize: 12, formatter: p => fmt(p.value) },
+          endLabel: { show: true, color: ink2, fontSize: 12, fontFamily: font, formatter: p => fmt(p.value) },
           emphasis: { scale: 1.4 },
         };
       }
       const isTop = !s.stack || lastStack[s.stack] === i;
-      const r = 4;
       return {
         type: 'bar', name: s.name, stack: s.stack, data: spec.rows.map(row => row[s.key]), color,
         barMaxWidth: 24, barGap: '20%',
         itemStyle: {
           color,
-          borderRadius: isTop ? (horizontal ? [0, r, r, 0] : [r, r, 0, 0]) : 0,
-          borderColor: s.stack ? surface : 'transparent', borderWidth: s.stack ? 1 : 0,
+          borderRadius: isTop ? (horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]) : 0,
+          borderColor: s.stack ? card : 'transparent', borderWidth: s.stack ? 1 : 0,
         },
-        label: horizontal ? { show: true, position: 'right', color: ink2, fontSize: 11, formatter: p => fmt(p.value) } : { show: false },
+        label: horizontal ? { show: true, position: 'right', color: ink2, fontSize: 12, fontFamily: font, formatter: p => fmt(p.value) } : { show: false },
       };
     });
     return {
       animation: false,
-      grid: { left: 8, right: spec.kind === 'line' ? 44 : horizontal ? 52 : 12, top: 14, bottom: 4, containLabel: true },
+      textStyle: { fontFamily: font },
+      grid: { left: 4, right: spec.kind === 'line' ? 44 : horizontal ? 52 : 8, top: 14, bottom: 4, containLabel: true },
       tooltip: {
         trigger: 'axis', axisPointer: { type: spec.kind === 'line' ? 'line' : 'shadow', lineStyle: { color: axis } },
-        backgroundColor: surface, borderColor: grid, textStyle: { color: css('--ink'), fontSize: 12 },
+        backgroundColor: card, borderColor: line, textStyle: { color: css('--ink'), fontSize: 13, fontFamily: font },
         valueFormatter: v => fmt(v),
       },
       xAxis: horizontal ? valAxis : catAxis,
@@ -330,50 +439,66 @@
     };
   }
 
-  function legendHtml(spec) {
-    if (spec.series.length < 2) return '';
-    return '<div class="legend">' + spec.series.map(s =>
-      `<span><i style="background:var(${s.color})"></i>${s.name}</span>`).join('') + '</div>';
+  // ---------- Data modal ----------
+  const modal = document.getElementById('data-modal');
+  let current = null;
+  function cell(spec, k, i, v) {
+    if (i === 0) return /^\d{4}-\d{2}$/.test(v) ? fmtMonth(v) : nice(String(v));
+    if (typeof v !== 'number') return v ?? '';
+    const isCount = /students|check_ins$|transactions|invoices|units|morning|evening|unassigned/.test(k);
+    if (spec.money && !isCount) return num(v, 2);
+    return num(v, k.endsWith('_pct') || k.endsWith('per_student') ? 1 : 0);
   }
-
-  function tableHtml(spec) {
+  function openData(spec) {
+    current = spec;
     const rows = spec.tableRows || spec.rows;
-    const head = spec.cols.map(c => `<th scope="col">${c[1]}</th>`).join('');
-    const body = rows.map(r => '<tr>' + spec.cols.map(([k], i) => {
-      let v = r[k];
-      if (i === 0) v = /^\d{4}-\d{2}$/.test(v) ? fmtMonth(v) : nice(String(v));
-      else if (typeof v === 'number') v = num(v, spec.money && !/count|transactions|invoices|units/.test(k) ? 2 : (spec.decimals || (k.endsWith('_pct') ? 1 : 0)));
-      return `<td>${v ?? ''}</td>`;
-    }).join('') + '</tr>').join('');
-    return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    document.getElementById('modal-title').textContent = spec.title;
+    document.getElementById('modal-sub').textContent = spec.sub;
+    document.getElementById('modal-count').textContent = `${rows.length} rows`;
+    const head = spec.cols.map(c => `<th scope="col">${esc(c[1])}</th>`).join('');
+    const body = rows.map(r => '<tr>' + spec.cols.map(([k], i) => `<td>${esc(cell(spec, k, i, r[k]))}</td>`).join('') + '</tr>').join('');
+    document.getElementById('modal-body').innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    modal.showModal();
   }
+  document.getElementById('modal-close').addEventListener('click', () => modal.close());
+  modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+  document.getElementById('modal-download').addEventListener('click', () => {
+    if (!current) return;
+    const rows = current.tableRows || current.rows;
+    const keys = current.cols.map(c => c[0]);
+    const csv = [keys.join(',')].concat(rows.map(r => keys.map(k => {
+      const v = r[k] ?? ''; return /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v;
+    }).join(','))).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = current.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
 
+  // ---------- Render cards ----------
+  const tableIcon = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M2 6.5h12M2 10h12M6.5 6.5v7"/></svg>';
+  const charts = [];
   document.querySelectorAll('[data-chart]').forEach(card => {
     const spec = specs[card.dataset.chart];
-    const h = spec.tall ? 300 : spec.short ? 200 : 260;
+    const legend = spec.series.length > 1
+      ? '<div class="legend">' + spec.series.map(s => `<span><i style="background:var(${s.color})"></i>${s.name}</span>`).join('') + '</div>' : '';
     card.innerHTML =
       `<div class="card-head"><div><h3>${spec.title}</h3><p class="sub">${spec.sub}</p></div>` +
-      `<button class="toggle" type="button" aria-pressed="false">Table</button></div>` +
-      legendHtml(spec) +
-      `<div class="chart" style="height:${h}px" role="img" aria-label="${spec.title}. ${spec.sub}"></div>` +
-      `<div class="tbl">${tableHtml(spec)}</div>`;
-    const el = card.querySelector('.chart');
-    const chart = echarts.init(el, null, { renderer: 'svg' });
+      `<button class="data-btn" type="button" aria-label="View data for ${esc(spec.title)}">${tableIcon}Data</button></div>` +
+      legend +
+      `<div class="chart" style="height:${spec.h || 260}px" role="img" aria-label="${esc(spec.title)}. ${esc(spec.sub)}"></div>`;
+    const chart = echarts.init(card.querySelector('.chart'), null, { renderer: 'svg' });
     chart.setOption(option(spec));
     charts.push({ chart, spec });
-    const btn = card.querySelector('.toggle');
-    btn.addEventListener('click', () => {
-      const on = card.classList.toggle('show-table');
-      btn.textContent = on ? 'Chart' : 'Table';
-      btn.setAttribute('aria-pressed', String(on));
-      if (!on) chart.resize();
-    });
+    card.querySelector('.data-btn').addEventListener('click', () => openData(spec));
   });
 
   const repaint = () => charts.forEach(({ chart, spec }) => chart.setOption(option(spec), true));
   window.addEventListener('resize', () => charts.forEach(({ chart }) => chart.resize()));
   if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', repaint);
   new MutationObserver(repaint).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(repaint);
 })();
 </script>
 </body>
